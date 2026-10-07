@@ -1,0 +1,63 @@
+name: test
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  linux:
+    name: linux-${{ matrix.runner }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - run: go build ./...
+      - run: go vet ./...
+      - name: Test
+        timeout-minutes: 3
+        run: go test -count=1 -race -timeout 60s ./...
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - run: go build ./...
+      - run: go vet ./...
+      - name: Test
+        timeout-minutes: 3
+        run: go test -count=1 -race -timeout 60s ./...
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: gofmt
+        run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+      - name: go.mod tidy
+        run: |
+          go mod tidy -diff || { echo "go.mod/go.sum not tidy: run go mod tidy"; exit 1; }
+      - name: Install golangci-lint
+        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0
+      # Windows is left out on purpose: the package builds only on darwin and
+      # linux (see the build constraints), where glaze has what scorcio needs.
+      - name: Lint (darwin, linux)
+        run: |
+          for os in darwin linux; do
+            echo "== GOOS=$os =="
+            GOOS=$os $(go env GOPATH)/bin/golangci-lint run ./...
+          done
+      - name: Cross-build
+        run: |
+          for t in darwin/arm64 darwin/amd64 linux/arm64 linux/amd64; do
+            GOOS=${t%/*} GOARCH=${t#*/} CGO_ENABLED=0 go build -trimpath -o /dev/null . || exit 1
+          done

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Web site URL</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>http</string>
+				<string>https</string>
+			</array>
+		</dict>
+	</array>
+	<key>LSMinimumSystemVersion</key>
+	<string>12.0</string>
+	<key>NSCameraUsageDescription</key>
+	<string>A web page you allowed wants to use the camera.</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>© 2026 Cesar Gimenes. MIT License.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>A web page you allowed wants to use the microphone.</string>
+	<key>UTImportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.plain-text</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Filo script</string>
+			<key>UTTypeIdentifier</key>
+			<string>com.github.crgimenes.filo</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>filo</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
+</dict>
+</plist>

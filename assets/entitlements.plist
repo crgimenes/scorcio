@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  macOS entitlements. release.sh signs with this file simply because it exists here:
+  that presence is what turns the sandbox on.
+
+  A browser needs the network as a client and nothing else by default. Downloads are
+  saved only where the user picks in the save panel, which the sandbox grants for that
+  one file (user-selected read-write). No server sockets (scorcio opens no port) and no
+  location. Camera and microphone are there for calls: a page only reaches them after
+  scorcio asks the user (once per site and process) and macOS asks once for the app.
+
+  Under the sandbox, init.filo and the website data live in the app container
+  (~/Library/Containers/<bundle id>/Data/Library/...), not in the development build's
+  ~/Library/Application Support/scorcio.
+-->
+<plist version="1.0">
+<dict>
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<key>com.apple.security.network.client</key>
+	<true/>
+	<key>com.apple.security.files.user-selected.read-write</key>
+	<true/>
+	<key>com.apple.security.device.camera</key>
+	<true/>
+	<key>com.apple.security.device.audio-input</key>
+	<true/>
+</dict>
+</plist>
