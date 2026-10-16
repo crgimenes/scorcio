@@ -59,7 +59,7 @@ func TestInstanceArgs(t *testing.T) {
 }
 
 func TestOpenElsewhere(t *testing.T) {
-	for _, page := range []string{"", "about:blank", "file:///etc/passwd", "javascript:alert(1)"} {
+	for _, page := range []string{"", "about:blank", "javascript:alert(1)", "data:text/html,x"} {
 		err := openElsewhere([]string{"true"}, page)
 		if err == nil {
 			t.Errorf("openElsewhere(%q): want error", page)

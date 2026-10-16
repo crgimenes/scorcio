@@ -163,6 +163,9 @@ func checkAliasTarget(target string) error {
 		_, err := explicitURL(target)
 		return err
 	}
+	if looksLikePath(target) {
+		return nil // the file is looked for when the alias is used
+	}
 	_, ok := bareAddress(target)
 	if !ok {
 		return errors.New("not an address")

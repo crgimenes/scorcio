@@ -4,7 +4,9 @@ package main
 
 import (
 	"errors"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -55,13 +57,13 @@ func TestOnLoadCallsPrimitives(t *testing.T) {
 }
 
 func TestNavigateKeepsTheAddressRules(t *testing.T) {
-	b, r, err := loadScript(t, `(def on-load (fn (url) (navigate "file:///etc/passwd")))`)
+	b, r, err := loadScript(t, `(def on-load (fn (url) (navigate "ftp://x.example/")))`)
 	if err != nil {
 		t.Fatal(err)
 	}
 	b.loaded("https://x.example/")
 	if len(r.calls) != 0 {
-		t.Fatalf("navigate loaded a non-http url: %q", r.calls)
+		t.Fatalf("navigate loaded a refused url: %q", r.calls)
 	}
 }
 
@@ -212,8 +214,26 @@ func TestAlias(t *testing.T) {
 		}
 	}
 
+	// An alias may name a local page; the file is looked for on use.
+	page := filepath.Join(t.TempDir(), "plan.html")
+	b, _, err = loadScript(t, `(alias "plan" "`+page+`")`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := b.resolve("plan"); err == nil {
+		t.Error("alias to a missing file resolved")
+	}
+	if err := os.WriteFile(page, []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	got, err := b.resolve("plan")
+	if err != nil || got != "file://"+page {
+		t.Errorf("alias to a file: %q, %v; want file://%s", got, err, page)
+	}
+
 	for _, src := range []string{
-		`(alias "x" "file:///etc/passwd")`,
+		`(alias "x" "file://other.host/etc/passwd")`,
+		`(alias "x" "ftp://x.example/")`,
 		`(alias "x" "javascript:alert(1)")`,
 		`(alias "x" "http://s.example/?q=%s")`,
 		`(alias "x" "https://s.example/?q=%s&r=%s")`,

@@ -25,8 +25,9 @@ func init() { runtime.LockOSThread() }
 
 const usage = `usage: scorcio [url | -]
 
-Open one page in one window. Without a url, ask for it; with "-" or a
-pipe on stdin, read it from the first line of stdin.
+Open one page in one window: a url, a local file (a path, or a name of
+a file here), or words for the search provider. Without one, ask; with
+"-" or a pipe on stdin, read it from the first line of stdin.
 
   -h, --help   show this help
   -version     print the version
@@ -198,7 +199,8 @@ func stderrDiscarded() bool {
 	return err == nil && os.SameFile(fi, null)
 }
 
-func showError(msg string) {
+// showError is a plain alert; tests swap it out.
+var showError = func(msg string) {
 	_, _ = alert.Show(alert.Options{
 		Title:   "Scorcio",
 		Message: msg,
@@ -281,6 +283,7 @@ type browser struct {
 
 	current  string // the page on screen, once one committed
 	loading  bool   // a navigation started and has not ended
+	asked    string // the URL that navigation was for
 	exitCode int
 
 	// media holds the answer per origin, so a page that asks again does not
@@ -339,6 +342,7 @@ func loadingTitle(url string) string { return "… " + url }
 
 func (b *browser) navigationStart(url string) {
 	b.loading = true
+	b.asked = url
 	b.w.SetTitle(loadingTitle(url))
 	b.trace("event=start url=%q", url)
 }
@@ -364,6 +368,11 @@ func (b *browser) contentShown() { b.trace("event=shown") }
 
 func (b *browser) navigation(ev glaze.NavigationEvent) {
 	b.loading = false
+	if ev.URL == "" {
+		// A load refused before it had a URL to report (a file outside
+		// the sandbox) is still about the page that was asked for.
+		ev.URL = b.asked
+	}
 	if ev.Kind == glaze.NavigationFinished {
 		b.current = ev.URL
 		b.w.SetTitle(ev.URL)

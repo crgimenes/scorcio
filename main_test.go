@@ -5,6 +5,7 @@ package main
 import (
 	"errors"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -76,12 +77,24 @@ func TestOpenURLsOnePagePerProcess(t *testing.T) {
 		t.Fatalf("page %q spawned %q", page, spawned)
 	}
 
-	// A launch URL that is not http(s) is refused like any other address.
+	// A launch URL follows the address rules: a file the system hands over
+	// (Open With, open -a) is this window's page; a missing one is refused.
+	page = filepath.Join(t.TempDir(), "doc.html")
+	err = os.WriteFile(page, []byte("x"), 0o600)
+	if err != nil {
+		t.Fatal(err)
+	}
 	b = &browser{trace: func(string, ...any) {}, search: defaultSearch}
-	b.openURLs([]string{"file:///etc/passwd"})
+	b.openURLs([]string{"file://" + page})
+	got, err := b.firstPage("")
+	if err != nil || got != "file://"+page {
+		t.Fatalf("file launch URL: %q, %v", got, err)
+	}
+	b = &browser{trace: func(string, ...any) {}, search: defaultSearch}
+	b.openURLs([]string{"file:///no/such/file.html"})
 	_, err = b.firstPage("")
 	if err == nil {
-		t.Fatal("a file: launch URL was accepted")
+		t.Fatal("a launch URL for a missing file was accepted")
 	}
 }
 
@@ -89,15 +102,24 @@ type titleRecorder struct {
 	glaze.WebView
 	titles     []string
 	dispatched int
+	run        bool     // run what is dispatched (the alert must be swapped out)
+	errors     []string // what showError was given
 }
 
 func (r *titleRecorder) SetTitle(t string) { r.titles = append(r.titles, t) }
-func (r *titleRecorder) Dispatch(f func()) { r.dispatched++ } // never runs the alert
+func (r *titleRecorder) Dispatch(f func()) {
+	r.dispatched++
+	if r.run {
+		f()
+	}
+}
 
 // The title marks a page while it loads and goes back to the page on screen
 // when the load ends any other way than finishing.
 func TestLoadingTitle(t *testing.T) {
-	r := &titleRecorder{}
+	r := &titleRecorder{run: true}
+	defer func(f func(string)) { showError = f }(showError)
+	showError = func(msg string) { r.errors = append(r.errors, msg) }
 	b := &browser{w: r, trace: func(string, ...any) {}}
 	nav := func(kind glaze.NavigationKind, url string) {
 		ev := glaze.NavigationEvent{Kind: kind, URL: url}
@@ -111,17 +133,23 @@ func TestLoadingTitle(t *testing.T) {
 	b.navigationStart("https://b.example/")
 	nav(glaze.NavigationFailed, "https://b.example/")
 	b.navigationStart("https://c.example/file.zip")
+	nav(glaze.NavigationFailed, "") // refused before it had a URL: named after the page asked for
+	if len(r.errors) != 2 || !strings.Contains(r.errors[1], "https://c.example/file.zip") {
+		t.Fatalf("failure without a URL: %q", r.errors)
+	}
+	b.navigationStart("https://c.example/file.zip")
 	b.settleTitle() // what Stop and a download do
 	want := []string{
 		"… https://a.example/", "https://a.example/",
 		"… https://b.example/", "https://a.example/",
 		"… https://c.example/file.zip", "https://a.example/",
+		"… https://c.example/file.zip", "https://a.example/",
 	}
 	if strings.Join(r.titles, " | ") != strings.Join(want, " | ") {
 		t.Fatalf("titles:\n%s\nwant:\n%s", strings.Join(r.titles, " | "), strings.Join(want, " | "))
 	}
-	if b.exitCode != 0 || r.dispatched != 1 {
-		t.Fatalf("a failure after the first page: exit %d, %d dispatches; want 0 and 1 (the alert)", b.exitCode, r.dispatched)
+	if b.exitCode != 0 || r.dispatched != 2 {
+		t.Fatalf("failures after the first page: exit %d, %d dispatches; want 0 and 2 (the alerts)", b.exitCode, r.dispatched)
 	}
 }
 

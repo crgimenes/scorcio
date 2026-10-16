@@ -17,6 +17,7 @@ scorcio https://go.dev
 scorcio go.dev                 # https:// is assumed
 scorcio localhost:8080         # local addresses get http://
 scorcio "go os startprocess"   # anything else goes to the search provider
+scorcio ~/notes/plan.html      # a local file: a path, or a name of a file here
 scorcio "$(fzf < ~/.config/browser/bookmarks)"
 bookmark-selector | scorcio    # first line of stdin
 scorcio                        # asks for an address; Esc quits
@@ -35,6 +36,11 @@ New Window -- is a new scorcio process with a window of its own.
 A page whose certificate is not valid does not load: the first page ends the
 process with the error on stderr (and an alert when started from the Dock or
 a launcher); later ones show an alert and the current page stays.
+
+A local page may use what sits beside it (its stylesheet, images) and nothing
+else; a web page can never reach a local one. In the sandboxed macOS app a
+local page comes through the system -- Open With in the Finder, `open -a
+Scorcio page.html` -- which is what grants the app the file.
 
 A page's alert, confirm and prompt show as dialogs titled with the site that
 asks; from its second one on, Stop Dialogs silences the page until it loads a

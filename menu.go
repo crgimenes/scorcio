@@ -115,8 +115,8 @@ func openElsewhere(argv []string, page string) error {
 	if err != nil {
 		return err
 	}
-	if u.Scheme != "http" && u.Scheme != "https" {
-		return errors.New("no web page to open")
+	if u.Scheme != "http" && u.Scheme != "https" && u.Scheme != "file" {
+		return errors.New("no page to open")
 	}
 	if len(argv) == 0 {
 		return openurl.Open(page)

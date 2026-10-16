@@ -7,14 +7,17 @@ import (
 	"fmt"
 	"net/netip"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"unicode"
 )
 
 const defaultSearch = "https://duckduckgo.com/?q=%s"
 
-// resolve turns what the user typed into the URL to load. Anything that does
-// not read as an address goes to the search provider; only http and https
+// resolve turns what the user typed into the URL to load. A path, or a
+// name that is a file here, is a local page; anything else that does not
+// read as an address goes to the search provider. Only http, https and file
 // are ever loaded.
 func resolve(input, search string) (string, error) {
 	in := strings.TrimSpace(input)
@@ -24,11 +27,51 @@ func resolve(input, search string) (string, error) {
 	if hasScheme(in) {
 		return explicitURL(in)
 	}
+	if looksLikePath(in) || isFile(in) {
+		return fileURL(in)
+	}
 	u, ok := bareAddress(in)
 	if ok {
 		return u, nil
 	}
 	return strings.Replace(search, "%s", url.QueryEscape(in), 1), nil
+}
+
+// looksLikePath is a path by its spelling alone: absolute, home-relative or
+// explicitly relative. A bare name needs to exist (isFile) to count.
+func looksLikePath(in string) bool {
+	return strings.HasPrefix(in, "/") || in == "~" || strings.HasPrefix(in, "~/") ||
+		in == "." || in == ".." || strings.HasPrefix(in, "./") || strings.HasPrefix(in, "../")
+}
+
+func isFile(name string) bool {
+	fi, err := os.Stat(name)
+	return err == nil && fi.Mode().IsRegular()
+}
+
+// fileURL is the file: URL of a local page. The file must be there and be a
+// file: a typo must not turn into a search, and the engine shows nothing
+// useful for a directory.
+func fileURL(path string) (string, error) {
+	if path == "~" || strings.HasPrefix(path, "~/") {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		path = home + path[1:]
+	}
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return "", err
+	}
+	fi, err := os.Stat(abs)
+	if err != nil {
+		return "", err
+	}
+	if !fi.Mode().IsRegular() {
+		return "", fmt.Errorf("%s: not a file", abs)
+	}
+	return (&url.URL{Scheme: "file", Path: abs}).String(), nil
 }
 
 // expandAlias rewrites input whose first word is an alias from init.filo. A
@@ -75,6 +118,13 @@ func explicitURL(in string) (string, error) {
 	u, err := url.Parse(in)
 	if err != nil {
 		return "", err
+	}
+	if u.Scheme == "file" {
+		// file://host/ names another machine's file; only this one's load.
+		if u.Host != "" && u.Host != "localhost" {
+			return "", fmt.Errorf("file on another host %q", u.Host)
+		}
+		return fileURL(u.Path)
 	}
 	if u.Scheme != "http" && u.Scheme != "https" {
 		return "", fmt.Errorf("unsupported scheme %q", u.Scheme)
