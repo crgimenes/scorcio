@@ -1,8 +1,8 @@
-github.com/crgimenes/filo v0.0.28 h1:cjOZG67dC7FTHjURgDhQllZve7asvh/Lq9FK01enBno=
-github.com/crgimenes/filo v0.0.28/go.mod h1:KmVbVAr7nleiZprZLWHXoaVW+I+NuftpUDdUmBbaIHs=
-github.com/crgimenes/glaze v0.0.81 h1:zvFxrQRar5p7Fv7E1LWfEMInLzxgEonST7ppuNVWlko=
-github.com/crgimenes/glaze v0.0.81/go.mod h1:6entg9bLZvTDjEuVBX/tO2c4I1HlMPuerkpnVwIVFZo=
-github.com/crgimenes/native v0.1.16 h1:8uAjc8qiSr1HlEE0GPPU+Ua070LLeGXXRUVSX6u32ZY=
-github.com/crgimenes/native v0.1.16/go.mod h1:Z+AGFxyW5htcS1+VnF/tAokG+o4JcPOlkcfbyAd1hes=
-github.com/ebitengine/purego v0.11.1 h1:2zpWRSQNVKN4eKsKO9eM1ILDgWfYMY9GwqRmK6XeQ/0=
-github.com/ebitengine/purego v0.11.1/go.mod h1:DCHPP08djqhNSoTfImcnHYQRZmd0qhakvrozqaEYhGQ=
+github.com/crgimenes/filo v0.1.1 h1:ynpj6/LlWHJd90SHP1aMkm/iIiaYgZVAeBB3sLsIw3g=
+github.com/crgimenes/filo v0.1.1/go.mod h1:w/0fYBt6HUfzDD3VbsnRooN3RyxctJDb/St5WtvjZik=
+github.com/crgimenes/glaze v0.0.82 h1:/jploUMUXdYhXEkkidSYJSzn7M29o+Kt63cmkN4CCME=
+github.com/crgimenes/glaze v0.0.82/go.mod h1:41rd4sKUekbjd2w9vUSKO4JBf0WKdR1wd+gud5S/agk=
+github.com/crgimenes/native v0.1.18 h1:zn0fFlskRWue3UOKhrhuedt07j+XX7wWceNRHEWiTGM=
+github.com/crgimenes/native v0.1.18/go.mod h1:uUxjYDLsE7dKUI/8TFPciygDWwBjNV+PxNXWtLAydsw=
+github.com/ebitengine/purego v0.11.3 h1:OB+JLpdm7ioymhyA+6s5kbb/uOuYycAgL8NNTFc5MLg=
+github.com/ebitengine/purego v0.11.3/go.mod h1:DCHPP08djqhNSoTfImcnHYQRZmd0qhakvrozqaEYhGQ=
