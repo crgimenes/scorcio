@@ -111,8 +111,8 @@ events reach the script; a page never can. Each call is bounded.
 macOS and Linux (WebKitGTK 4.1 or 6.0 must be installed). Go, no cgo:
 
 ```sh
-go build .
-GOOS=linux GOARCH=arm64 go build .
+go build ./cmd/scorcio
+GOOS=linux GOARCH=arm64 go build ./cmd/scorcio
 ```
 
 On macOS, `release.sh` builds a signed, sandboxed `.app` from `assets/` (icon,
